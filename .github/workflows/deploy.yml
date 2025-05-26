@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: 7298586457.dkr.ecr.us-east-1.amazonaws.com
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,6 +25,7 @@ jobs:
         run: dotnet build ./Work2/Work2.sln --no-restore
       - name: ✅ Run Tests
         run: dotnet test ./Work2/Work2.sln --no-build --verbosity normal
+
   publish:
     needs: build
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
@@ -36,11 +42,11 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ${{ env.AWS_REGION }}
       - name: 🔑 Login to Amazon ECR
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+        run: aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REGISTRY }}
       - name: 📦 Publish Docker Image to Amazon ECR
         working-directory: ./Work2/WebApplication1/
         run: |
-          dotnet publish -c Release -p:ContainerRepository=${{ secrets.REPOSITORY }} -p:RuntimeIdentifier=linux-x64
-          docker push ${{ secrets.REPOSITORY }} --all-tags
+          dotnet publish -c Release -p:ContainerRepository=${{ env.ECR_REGISTRY }}/${{ secrets.REPOSITORY }} -p:RuntimeIdentifier=linux-x64
+          docker push ${{ env.ECR_REGISTRY }}/${{ secrets.REPOSITORY }} --all-tags
