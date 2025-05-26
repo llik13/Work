@@ -91,7 +91,7 @@ jobs:
       - name: 🚀 Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          task-definition: ./deployments/ecs-task-definition.json
+          task-definition: ./.github/deployments/ecs-task-definition.json
           service: work-service-ifatv02r
           cluster: productive-tiger-zx4plz
           wait-for-service-stability: true
