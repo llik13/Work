@@ -48,10 +48,9 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
       - name: 📦 Build and Push Docker Image
-        working-directory: ./Work2/WebApplication1/
         run: |
           # Build the Docker image
-          dotnet publish -c Release -p:ContainerRepository=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64 -p:ContainerImageTags="latest;${{ github.sha }}"
+          dotnet publish ./Work2/WebApplication1/WebApplication1.csproj -c Release -p:ContainerRepository=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64 -p:ContainerImageTags="latest;${{ github.sha }}"
 
           # Push the image to ECR
           docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }} --all-tags
