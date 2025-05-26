@@ -47,26 +47,30 @@ jobs:
       - name: 🔑 Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-      - name: 📋 List files for debugging
+      - name: 📦 Build Application
         run: |
-          echo "Current directory:"
-          pwd
-          echo "Directory contents:"
-          ls -la
-          echo "Work2 directory contents:"
-          ls -la Work2/
-          echo "WebApplication1 directory contents:"
-          ls -la Work2/WebApplication1/
-      - name: 📦 Build and Push Docker Image
-        run: |
-          # Navigate to project directory and build
           cd Work2/WebApplication1
+          dotnet publish -c Release -o ./publish
+      - name: 📝 Create Dockerfile
+        run: |
+          cat > Work2/WebApplication1/Dockerfile << 'EOF'
+          FROM mcr.microsoft.com/dotnet/aspnet:8.0
+          WORKDIR /app
+          COPY publish/ .
+          EXPOSE 8080
+          ENTRYPOINT ["dotnet", "WebApplication1.dll"]
+          EOF
+      - name: 🐳 Build and Push Docker Image
+        working-directory: ./Work2/WebApplication1
+        run: |
+          # Build Docker image
+          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest .
+          docker tag ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
-          # Build the Docker image using .NET container support
-          dotnet publish WebApplication1.csproj -c Release \
-            -p:ContainerRepository=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }} \
-            -p:RuntimeIdentifier=linux-x64 \
-            -p:ContainerImageTags="latest,${{ github.sha }}"
+          # Push images
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
 
-          # Push all tags
-          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }} --all-tags
+          echo "✅ Successfully pushed images:"
+          echo "  - ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest"
+          echo "  - ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
