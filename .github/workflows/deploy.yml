@@ -15,8 +15,8 @@ jobs:
         with:
           dotnet-version: 8.x
       - name: 📦 Restore Dependencies
-        run: dotnet restore
+        run: dotnet restore ./Work2/Work2.sln
       - name: 🏗️ Build Project
-        run: dotnet build --no-restore
+        run: dotnet build ./Work2/Work2.sln --no-restore
       - name: ✅ Run Tests
-        run: dotnet test --no-build --verbosity normal
+        run: dotnet test ./Work2/Work2.sln --no-build --verbosity normal
