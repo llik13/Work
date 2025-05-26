@@ -47,10 +47,26 @@ jobs:
       - name: 🔑 Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
+      - name: 📋 List files for debugging
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Directory contents:"
+          ls -la
+          echo "Work2 directory contents:"
+          ls -la Work2/
+          echo "WebApplication1 directory contents:"
+          ls -la Work2/WebApplication1/
       - name: 📦 Build and Push Docker Image
         run: |
-          # Build the Docker image
-          dotnet publish ./Work2/WebApplication1/WebApplication1.csproj -c Release -p:ContainerRepository=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }} -p:RuntimeIdentifier=linux-x64 -p:ContainerImageTags="latest;${{ github.sha }}"
+          # Navigate to project directory and build
+          cd Work2/WebApplication1
 
-          # Push the image to ECR
+          # Build the Docker image using .NET container support
+          dotnet publish WebApplication1.csproj -c Release \
+            -p:ContainerRepository=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }} \
+            -p:RuntimeIdentifier=linux-x64 \
+            -p:ContainerImageTags="latest,${{ github.sha }}"
+
+          # Push all tags
           docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }} --all-tags
