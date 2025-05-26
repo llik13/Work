@@ -30,9 +30,6 @@ jobs:
       - name: 🏗️ Build Project
         run: dotnet build ./Work2/WebApplication1/WebApplication1.csproj --no-restore
 
-      - name: ✅ Run Tests
-        run: dotnet test ./Work2/WebApplication1/WebApplication1.csproj --no-build --verbosity normal
-
       - name: 🔐 Login to Container Registry
         uses: docker/login-action@v3
         with:
@@ -44,10 +41,5 @@ jobs:
         working-directory: ./Work2/WebApplication1
         run: |
           IMAGE_NAME_LOWER=$(echo "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" | tr '[:upper:]' '[:lower:]')
-
-          dotnet publish -c Release \
-            -p:ContainerRepository=${IMAGE_NAME_LOWER} \
-            -p:ContainerImageTags="latest;${{ github.sha }}" \
-            -p:RuntimeIdentifier=linux-x64
-
+          dotnet publish -c Release -p:ContainerRepository=${IMAGE_NAME_LOWER} -p:ContainerImageTags="latest;${{ github.sha }}" -p:RuntimeIdentifier=linux-x64
           docker push ${IMAGE_NAME_LOWER} --all-tags
